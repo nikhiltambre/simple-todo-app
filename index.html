@@ -3,10 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Todo App</title>
 </head>
 <body>
-    <h1>Todo list App</h1>
-    <form></form>
+    <h1>Todo List</h1>
+    <form id="taskForm">
+        <input type="text" id="taskInput" placeholder="Enter a new task" required>
+        <button type="submit">Add Task</button>
+    </form>
+    <ul id="taskList"></ul>
+    <div>homeboy</div>
+
+    <script>
+        // Function to load tasks and display them
+        function loadTasks() {
+            fetch('/tasks')
+                .then(response => response.json())
+                .then(data => {
+                    const taskList = document.getElementById('taskList');
+                    taskList.innerHTML = ''; // Clear the existing list
+                    data.forEach(task => {
+                        const li = document.createElement('li');
+                        li.textContent = `${task.task} (ID: ${task.id})`;
+                        li.setAttribute('data-id', task.id);
+                        
+                        // Create a delete button for each task
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = function() {
+                            deleteTask(task.id);
+                        };
+
+                        li.appendChild(deleteButton);
+                        taskList.appendChild(li);
+                    });
+                });
+        }
+
+        // Handle form submission to add a new task
+        document.getElementById('taskForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+            const taskInput = document.getElementById('taskInput').value;
+
+            fetch('/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task: taskInput }) // Convert the task data to a JSON string
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // Show a success message
+                loadTasks(); // Reload the task list
+                document.getElementById('taskInput').value = ''; // Clear the input
+            });
+        });
+
+        // Function to delete a task by ID
+        function deleteTask(taskId) {
+            fetch(`/tasks/${taskId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // Show a success message
+                loadTasks(); // Reload the task list
+            });
+        }
+
+        // Load tasks when the page loads
+        loadTasks();
+    </script>
 </body>
 </html>
